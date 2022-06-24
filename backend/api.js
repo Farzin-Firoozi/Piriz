@@ -168,7 +168,7 @@ app.post("/info", async (req, res) => {
 
 app.get("/temperatures", async (req, res) => {
   await db.all(
-    "SELECT * FROM temperatures ORDER BY date_added DESC LIMIT 30",
+    "SELECT id, value ,date_added FROM temperatures ORDER BY date_added DESC LIMIT 30",
     [],
     (err, rows) => {
       if (err) {
