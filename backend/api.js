@@ -17,7 +17,7 @@ app.listen(HTTP_PORT, () => {
 });
 
 const client = mqtt.connect(MQTT_URL, {
-  clientId: "test",
+  clientId: "rest",
   username: "backend",
   clean: true,
   connectTimeout: 4000,
@@ -144,9 +144,8 @@ app.get("/info", async (req, res) => {
       }
       const info = rows[0];
 
-      console.log("get", info);
-
-      let remainingTime = info.timer_length;
+      info.timer_length = +info.timer_length;
+      let remainingTime = +info.timer_length;
 
       if (+info.timer_length !== -1) {
         remainingTime = Math.floor(
@@ -211,7 +210,7 @@ app.post("/info", async (req, res) => {
 
         const temp = { ...info };
 
-        if (info.timer_length !== -1) {
+        if (+info.timer_length !== -1) {
           remainingTime = Math.floor(
             (+Date.parse(info.timer_updated) +
               +info.timer_length * 1000 -
@@ -229,7 +228,7 @@ app.post("/info", async (req, res) => {
             temp.timer_length = timer_length;
           }
         } else {
-          temp.timer_length = info.timer_length;
+          temp.timer_length = +info.timer_length;
         }
 
         client.publish("info", serializeInfo(temp), {
