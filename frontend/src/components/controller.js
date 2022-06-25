@@ -1,26 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { getInfo } from "../api";
+import React from "react";
+import Chart from "./chart";
 import ModeSelector from "./mode";
 
 const InfoController = () => {
-  const [info, setInfo] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const fetchData = () => {
-    setIsLoading(true);
-    getInfo()
-      .then((res) => {
-        setInfo(res.data);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   return (
     <>
       <ModeSelector />

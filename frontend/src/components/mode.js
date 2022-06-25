@@ -13,6 +13,7 @@ import WindIcon from "../images/wind.svg";
 
 import React, { useEffect, useState } from "react";
 import { sendInfo } from "../api";
+import Chart from "./chart";
 
 const ModeSelector = () => {
   const [info, setInfo] = useState({});
@@ -73,7 +74,7 @@ const ModeSelector = () => {
           <div
             onClick={onDeviceStateChange}
             style={{
-              color: info?.is_active ? "green" : "gray",
+              color: info?.is_active ? "#1890FF" : "gray",
               cursor: "pointer",
             }}
           >
@@ -168,6 +169,8 @@ const ModeSelector = () => {
               </Form.Item>
             </Form>
           </Card>
+
+          <Chart />
         </>
       )}
     </>
