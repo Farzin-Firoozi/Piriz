@@ -123,7 +123,7 @@ app.get("/info", async (req, res) => {
 app.post("/info", async (req, res) => {
   let is_manual = req.body.is_manual;
   let timer_length = req.body.timer_length;
-  let is_active = req.body.is_manual;
+  let is_active = req.body.is_active;
   let is_fan_active = req.body.is_fan_active;
   let lastInfo = {};
 
