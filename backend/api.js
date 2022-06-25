@@ -144,7 +144,6 @@ app.post("/info", async (req, res) => {
 
       if (timer_length != undefined) {
         newInfo.timer_length = timer_length;
-        newInfo.updateTimer = true;
       }
 
       if (is_active != undefined) {

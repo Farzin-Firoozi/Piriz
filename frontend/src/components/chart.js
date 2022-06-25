@@ -4,7 +4,7 @@ import { getTemperatures } from "../api";
 import { Line } from "@ant-design/plots";
 
 import { LoadingOutlined } from "@ant-design/icons";
-import { Spin } from "antd";
+import { Card, Spin } from "antd";
 
 const Chart = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +34,7 @@ const Chart = () => {
   }, []);
 
   return (
-    <div style={{ position: "relative" }}>
+    <Card style={{ position: "relative" }}>
       {isLoading && (
         <Spin
           style={{ position: "absolute", right: 12, top: 12 }}
@@ -74,7 +74,7 @@ const Chart = () => {
           },
         }}
       />
-    </div>
+    </Card>
   );
 };
 
