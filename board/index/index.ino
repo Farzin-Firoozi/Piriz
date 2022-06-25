@@ -2,11 +2,8 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-// const char *ssid = "FARZIN";
-// const char *password = "13492281";
-
-const char *ssid = "Mohseni";
-const char *password = "Mohseniisnothere!@#$";
+const char *ssid = "Captain";
+const char *password = "Mohseniisgone1234";
 
 const char *mqtt_server = "94.101.186.116";
 
@@ -31,6 +28,7 @@ void setup_wifi() {
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED) {
         Serial.print(".");
+        delay(500);
     }
     Serial.println("");
     Serial.print("WiFi connected - ESP IP address: ");
@@ -70,7 +68,6 @@ void reconnect() {
             client.subscribe("info");
             client.publish("board", "");
         } else {
-            digitalWrite(D3, HIGH);
             Serial.print("failed, rc=");
             Serial.print(client.state());
             Serial.println(" try again in 5 seconds");
@@ -103,18 +100,37 @@ void loop() {
     int rawvoltage = analogRead(outputpin);
     float temperature = (rawvoltage / 1024.0) * 3300 / 10;
 
-    char str[32];
-    dtostrf(temperature, 8, 1, str);
-    client.publish("temperature", str);
-
     if (isActive) {
+        char str[32];
+        dtostrf(temperature, 8, 1, str);
+        client.publish("temperature", str);
+
         digitalWrite(D2, LOW);
+
+        if (isManualMode) {
+            digitalWrite(D5, !isFanActive ? HIGH : LOW);
+        } else {
+            if (temperature > 40) {
+                digitalWrite(D5, LOW);
+            } else {
+                digitalWrite(D5, HIGH);
+            }
+        }
+        if (timerLength == -1) {
+            digitalWrite(D4, HIGH);
+        } else {
+            if (timerLength > 0) {
+                digitalWrite(D4, timerLength % 2 == 0 ? HIGH : LOW);
+                timerLength--;
+            } else {
+                digitalWrite(D2, HIGH);
+            }
+        }
+
     } else {
         digitalWrite(D2, HIGH);
         digitalWrite(D5, HIGH);
         digitalWrite(D4, HIGH);
-
-        return;
     }
 
     Serial.print("timer:");
@@ -126,24 +142,5 @@ void loop() {
     // Serial.print("temperature:");
     // Serial.println(temperature);
 
-    if (isManualMode) {
-        digitalWrite(D5, !isFanActive ? HIGH : LOW);
-    } else {
-        if (temperature > 40) {
-            digitalWrite(D5, LOW);
-        } else {
-            digitalWrite(D5, HIGH);
-        }
-    }
-    if (timerLength == -1) {
-        digitalWrite(D4, HIGH);
-    } else {
-        if (timerLength > 0) {
-            digitalWrite(D4, timerLength % 2 == 0 ? HIGH : LOW);
-            timerLength--;
-        } else {
-            digitalWrite(D2, HIGH);
-        }
-    }
     delay(1000);
 }

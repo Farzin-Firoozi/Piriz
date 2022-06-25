@@ -11,7 +11,7 @@ const db = new sqlite3.Database("./iot.db", (err) => {
 let lastTemp = 0;
 
 const insertTemperature = (temperature) => {
-  if (Math.abs(+lastTemp - +temperature) > 0.3) {
+  if (+lastTemp !== +temperature) {
     lastTemp = temperature;
   } else {
     return;
