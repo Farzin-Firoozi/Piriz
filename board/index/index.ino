@@ -1,10 +1,9 @@
-#include <ArduinoJson.h>
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-const char *ssid = "Mohseni";
-const char *password = "Mohseniisnothere!@#$";
+const char *ssid = "FARZIN";
+const char *password = "13492281";
 
 const char *mqtt_server = "94.101.186.116";
 
@@ -17,6 +16,7 @@ int isManualMode = 0;
 int isFanActive = 0;
 int isActive = 1;
 int timerLength = 0;
+int clientConnected = 0;
 
 void setup_wifi()
 {
@@ -25,15 +25,21 @@ void setup_wifi()
     Serial.println();
     Serial.print("Connecting to ");
     Serial.println(ssid);
+
     WiFi.begin(ssid, password);
     while (WiFi.status() != WL_CONNECTED)
     {
         delay(500);
+        digitalWrite(D3, LOW);
+        delay(500);
+        digitalWrite(D3, HIGH);
+
         Serial.print(".");
     }
     Serial.println("");
     Serial.print("WiFi connected - ESP IP address: ");
     Serial.println(WiFi.localIP());
+        digitalWrite(D3, LOW);
 }
 
 void callback(String topic, byte *message, unsigned int length)
@@ -99,9 +105,8 @@ void setup()
     client.setCallback(callback);
     pinMode(D2, OUTPUT); // main
     pinMode(D3, OUTPUT); // connection status
-    pinMode(D4, OUTPUT); // fan
-    pinMode(D5, OUTPUT); // mode
-    pinMode(LED_BUILTIN, OUTPUT);
+    pinMode(D4, OUTPUT); // timer
+    pinMode(D5, OUTPUT); // fan
 }
 
 void loop()
@@ -141,20 +146,18 @@ void loop()
 
     if (isManualMode)
     {
-        digitalWrite(LED_BUILTIN, LOW);
-        digitalWrite(D4, isFanActive);
+        digitalWrite(D5, isFanActive);
     }
     else
     {
-        digitalWrite(LED_BUILTIN, HIGH);
 
-        if (temperature > 35)
+        if (temperature > 40)
         {
-            digitalWrite(D4, LOW);
+            digitalWrite(D5, LOW);
         }
         else
         {
-            digitalWrite(D4, HIGH);
+            digitalWrite(D5, HIGH);
         }
     }
 
