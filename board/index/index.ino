@@ -66,9 +66,11 @@ void reconnect() {
         //  Serial.print("Attempting MQTT connection...");
         if (client.connect("myBoard")) {
             // Serial.println("connected");
+            digitalWrite(D3, LOW);
             client.subscribe("info");
             client.publish("board", "");
         } else {
+            digitalWrite(D3, HIGH);
             Serial.print("failed, rc=");
             Serial.print(client.state());
             Serial.println(" try again in 5 seconds");
@@ -88,7 +90,6 @@ void setup() {
     pinMode(D3, OUTPUT);  // connection status
     pinMode(D4, OUTPUT);  // timer
     pinMode(D5, OUTPUT);  // fan
-    pinMode(LED_BUILTIN, OUTPUT);
 }
 
 void loop() {
@@ -110,10 +111,13 @@ void loop() {
         digitalWrite(D2, LOW);
     } else {
         digitalWrite(D2, HIGH);
+        digitalWrite(D5, HIGH);
+        digitalWrite(D4, HIGH);
+
         return;
     }
 
-    Serial.print("isManualMode:");
+    Serial.print("timer:");
     Serial.println(timerLength);
 
     // Serial.print("isFanActive:");
@@ -132,11 +136,13 @@ void loop() {
         }
     }
     if (timerLength == -1) {
-        // timer is stopped
+        digitalWrite(D4, HIGH);
     } else {
         if (timerLength > 0) {
             digitalWrite(D4, timerLength % 2 == 0 ? HIGH : LOW);
             timerLength--;
+        } else {
+            digitalWrite(D2, HIGH);
         }
     }
     delay(1000);
