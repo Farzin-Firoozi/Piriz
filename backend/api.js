@@ -17,7 +17,7 @@ app.listen(HTTP_PORT, () => {
 });
 
 const client = mqtt.connect(MQTT_URL, {
-  clientId: "Rest",
+  clientId: "test",
   username: "backend",
   clean: true,
   connectTimeout: 4000,
@@ -68,6 +68,8 @@ const insertIntoInfo = ({
   updateTimer = false,
 }) => {
   return new Promise((resolve, reject) => {
+    console.log("insert", updateTimer);
+
     let insert =
       "INSERT INTO info \
             (is_manual, is_active, is_fan_active, timer_updated, timer_length, updated_at)\
@@ -78,6 +80,7 @@ const insertIntoInfo = ({
         "INSERT INTO info \
             (is_manual, is_active, is_fan_active, timer_updated, timer_length, updated_at)\
             VALUES (?, ?, ?, datetime('now','localtime'), ?, datetime('now','localtime'))";
+
       db.run(
         insert,
         [is_manual, is_active, is_fan_active, timer_length],
@@ -86,7 +89,20 @@ const insertIntoInfo = ({
             reject(err);
             return;
           }
-          resolve();
+          db.all(
+            "SELECT * FROM info ORDER BY updated_at DESC LIMIT 1",
+            [],
+            (err, rows) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              console.log(rows);
+
+              resolve(rows[0]);
+            }
+          );
         }
       );
     } else {
@@ -98,7 +114,19 @@ const insertIntoInfo = ({
             reject(err);
             return;
           }
-          resolve();
+
+          db.all(
+            "SELECT * FROM info ORDER BY updated_at DESC",
+            [],
+            (err, rows) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+
+              resolve(rows[0]);
+            }
+          );
         }
       );
     }
@@ -107,15 +135,37 @@ const insertIntoInfo = ({
 
 app.get("/info", async (req, res) => {
   await db.all(
-    "SELECT * FROM info ORDER BY updated_at DESC",
+    "SELECT * FROM info ORDER BY updated_at DESC LIMIT 1",
     [],
     (err, rows) => {
       if (err) {
         res.status(400).json({ error: err.message });
         return;
       }
+      const info = rows[0];
 
-      res.status(200).json(rows[0]);
+      console.log("get", info);
+
+      let remainingTime = info.timer_length;
+
+      if (+info.timer_length !== -1) {
+        remainingTime = Math.floor(
+          (+Date.parse(info.timer_updated) +
+            +info.timer_length * 1000 -
+            +Date.now()) /
+            1000
+        );
+
+        if (remainingTime < -1) {
+          info.timer_length = 0;
+        } else {
+          info.timer_length = remainingTime;
+        }
+      }
+
+      // info.timer_length = (Date.parse(info.timer_updated) - Date.now()) / 1000;
+
+      res.status(200).json(info);
     }
   );
 });
@@ -143,7 +193,9 @@ app.post("/info", async (req, res) => {
       }
 
       if (timer_length != undefined) {
+        console.log("adding");
         newInfo.timer_length = timer_length;
+        newInfo.updateTimer = true;
       }
 
       if (is_active != undefined) {
@@ -154,12 +206,37 @@ app.post("/info", async (req, res) => {
         newInfo.is_fan_active = is_fan_active;
       }
 
-      insertIntoInfo(newInfo).then(() => {
-        client.publish("info", serializeInfo(newInfo), {
+      insertIntoInfo(newInfo).then((info) => {
+        let remainingTime = info.timer_length;
+
+        const temp = { ...info };
+
+        if (info.timer_length !== -1) {
+          remainingTime = Math.floor(
+            (+Date.parse(info.timer_updated) +
+              +info.timer_length * 1000 -
+              +Date.now()) /
+              1000
+          );
+
+          if (timer_length == undefined) {
+            if (remainingTime < 0) {
+              temp.timer_length = 0;
+            } else {
+              temp.timer_length = remainingTime;
+            }
+          } else {
+            temp.timer_length = timer_length;
+          }
+        } else {
+          temp.timer_length = info.timer_length;
+        }
+
+        client.publish("info", serializeInfo(temp), {
           qos: 1,
         });
-        lastSyncedInfo = newInfo;
-        res.status(200).json(newInfo);
+        lastSyncedInfo = { ...temp };
+        res.status(200).json(temp);
       });
     }
   );
